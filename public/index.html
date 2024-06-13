@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Management Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Project Management Dashboard</h1>
+    <div id="app"></div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = document.getElementById('app');
+
+            // Fetch projects and display them
+            axios.get('/projects/costs')
+                .then(response => {
+                    const projects = response.data;
+                    projects.forEach(project => {
+                        const projectDiv = document.createElement('div');
+                        projectDiv.classList.add('project');
+                        projectDiv.innerHTML = `
+                            <h2>${project.project_name}</h2>
+                            <p>Project Name: ${project.project_name}</p>
+                            <p>Start Date: ${project.start_date}</p>
+                            <p>End Date: ${project.end_date}</p>
+                            <p>Budget: $${project.budget}</p>
+                            <p>Total Labor Cost: $${project.total_labor_cost}</p>
+                            <p>Total Expenses: $${project.total_expenses}</p>
+                            <p>Total Subcontractor Invoices: $${project.total_invoices}</p>
+                            <p>Total Other Costs: $${project.total_other_costs}</p>
+                            <p>Total Cost: $${project.total_cost}</p>
+                            <p>Remaining Budget: $${project.budget - project.total_cost}</p>
+                            <button onclick="showUpdateForm(${project.project_id}, this)">Update Project</button>
+                            <div class="update-form">
+                                <h3>Update Project ID: ${project.project_id}</h3>
+                                <label>Project Name: <input type="text" name="project_name" value="${project.project_name}" required></label><br>
+                                <label>Start Date: <input type="date" name="start_date" value="${project.start_date}" required></label><br>
+                                <label>End Date: <input type="date" name="end_date" value="${project.end_date}" required></label><br>
+                                <label>Budget: <input type="number" name="budget" value="${project.budget}" required></label><br>
+                                <h4>Labor Charges</h4>
+                                <label>Hours Worked: <input type="number" name="hours_worked" value="${project.total_labor_cost / 50}" required></label><br>
+                                <label>Rate: <input type="number" name="rate" value="50" required></label><br>
+                                <h4>Expenses</h4>
+                                <label>Description: <input type="text" name="expense_description" value="Sample Expense" required></label><br>
+                                <label>Amount: <input type="number" name="expense_amount" value="${project.total_expenses}" required></label><br>
+                                <h4>Subcontractor Invoices</h4>
+                                <label>Subcontractor Name: <input type="text" name="subcontractor_name" value="Sample Subcontractor" required></label><br>
+                                <label>Amount: <input type="number" name="invoice_amount" value="${project.total_invoices}" required></label><br>
+                                <h4>Other Costs</h4>
+                                <label>Description: <input type="text" name="other_cost_description" value="Sample Cost" required></label><br>
+                                <label>Amount: <input type="number" name="other_cost_amount" value="${project.total_other_costs}" required></label><br>
+                                <button type="button" onclick="submitUpdate(${project.project_id}, this)">Submit</button>
+                            </div>
+                        `;
+                        app.appendChild(projectDiv);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching projects:', error);
+                });
+        });
+
+        function showUpdateForm(projectId, button) {
+            const projectDiv = button.parentElement;
+            projectDiv.classList.toggle('open');
+        }
+
+        function submitUpdate(projectId, button) {
+            const updateForm = button.parentElement;
+            const updatedData = {
+                project_name: updateForm.querySelector('input[name="project_name"]').value,
+                start_date: updateForm.querySelector('input[name="start_date"]').value,
+                end_date: updateForm.querySelector('input[name="end_date"]').value,
+                budget: updateForm.querySelector('input[name="budget"]').value,
+                hours_worked: updateForm.querySelector('input[name="hours_worked"]').value,
+                rate: updateForm.querySelector('input[name="rate"]').value,
+                expense_description: updateForm.querySelector('input[name="expense_description"]').value,
+                expense_amount: updateForm.querySelector('input[name="expense_amount"]').value,
+                subcontractor_name: updateForm.querySelector('input[name="subcontractor_name"]').value,
+                invoice_amount: updateForm.querySelector('input[name="invoice_amount"]').value,
+                other_cost_description: updateForm.querySelector('input[name="other_cost_description"]').value,
+                other_cost_amount: updateForm.querySelector('input[name="other_cost_amount"]').value
+            };
+            axios.post(`/projects/${projectId}/update`, updatedData)
+                .then(response => {
+                    alert(response.data.message);
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error updating project:', error);
+                });
+        }
+    </script>
+</body>
+</html>
